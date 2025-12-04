@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/meal_api_service.dart';
 import '../models/meal.dart';
 
+
+
 class MealDetailScreen extends StatefulWidget {
   final String mealId;
 

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 import '../models/category.dart';
 import '../services/meal_api_service.dart';
 import 'meals_screen.dart';
+import 'favorites_screen.dart';
 import 'meal_detail_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -21,9 +24,48 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   void initState() {
     super.initState();
+
+    _initFirebaseMessaging();
     loadCategories();
   }
 
+  // -----------------------------------------
+  // FIREBASE MESSAGING SETUP
+  // -----------------------------------------
+  Future<void> _initFirebaseMessaging() async {
+    // 1. Побарај дозвола
+    await FirebaseMessaging.instance.requestPermission();
+
+    // 2. Превземи device FCM token
+    FirebaseMessaging.instance.getToken().then((token) {
+      print("FCM TOKEN: $token");
+    });
+
+    // 3. Listener кога апликацијата е foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message.notification?.title ?? "New Notification",
+          ),
+        ),
+      );
+    });
+
+    // 4. Listener кога корисник клика на notification
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("User tapped the notification!");
+
+      // Ако сакаш можеш да отвориш Random Meal:
+      // openRandomMeal();
+    });
+  }
+
+  // -----------------------------------------
+  // LOAD CATEGORIES
+  // -----------------------------------------
   Future<void> loadCategories() async {
     final data = await _api.fetchCategories();
     setState(() {
@@ -33,18 +75,26 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
+  // -----------------------------------------
+  // SEARCH BAR
+  // -----------------------------------------
   void filterCategories(String query) {
     setState(() {
       _search = query;
       _filtered = _all
-          .where((cat) => cat.name.toLowerCase().contains(query.toLowerCase()))
+          .where((cat) =>
+          cat.name.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
 
+  // -----------------------------------------
+  // OPEN RANDOM MEAL
+  // -----------------------------------------
   Future<void> openRandomMeal() async {
     final meal = await _api.fetchRandomMeal();
     if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -53,15 +103,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
+  // -----------------------------------------
+  // UI
+  // -----------------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MealDB Categories'),
+        title: const Text('Categories'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.shuffle),
-            onPressed: openRandomMeal,
+            icon: const Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            },
           )
         ],
       ),
@@ -86,7 +144,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 final c = _filtered[index];
                 return Card(
                   margin: const EdgeInsets.symmetric(
-                      vertical: 8, horizontal: 12),
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                   child: ListTile(
                     leading: Image.network(
                       c.thumbnail,

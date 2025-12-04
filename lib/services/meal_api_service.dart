@@ -1,108 +1,74 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/category.dart';
 import '../models/meal.dart';
+import '../models/category.dart';
 
 class MealApiService {
   static const String _baseUrl = 'www.themealdb.com';
 
-  // 1. Fetch all categories
+  // Fetch all categories
   Future<List<Category>> fetchCategories() async {
     final uri = Uri.https(_baseUrl, '/api/json/v1/1/categories.php');
-    final response = await http.get(uri);
+    final res = await http.get(uri);
+    final data = jsonDecode(res.body);
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load categories');
-    }
-
-    final data = jsonDecode(response.body);
-    final List list = data['categories'] ?? [];
-
-    return list.map((e) => Category.fromJson(e)).toList();
+    return (data['categories'] as List)
+        .map((e) => Category.fromJson(e))
+        .toList();
   }
 
-  // 2. Fetch meals by category
+  // Fetch meals by category
   Future<List<Meal>> fetchMealsByCategory(String category) async {
     final uri = Uri.https(
       _baseUrl,
       '/api/json/v1/1/filter.php',
       {'c': category},
     );
+    final res = await http.get(uri);
+    final data = jsonDecode(res.body);
 
-    final response = await http.get(uri);
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load meals');
-    }
-
-    final data = jsonDecode(response.body);
-    final List list = data['meals'] ?? [];
-
-    return list.map((e) => Meal.fromListJson(e)).toList();
+    return (data['meals'] as List)
+        .map((e) => Meal.fromListJson(e))
+        .toList();
   }
 
-  // 3. Search meals (search.php)
-  Future<List<Meal>> searchMeals(String query) async {
-    final uri = Uri.https(
-      _baseUrl,
-      '/api/json/v1/1/search.php',
-      {'s': query},
-    );
-
-    final response = await http.get(uri);
-
-    if (response.statusCode != 200) {
-      throw Exception('Search failed');
-    }
-
-    final data = jsonDecode(response.body);
-    final List? list = data['meals'];
-
-    if (list == null) return [];
-
-    return list.map((e) => Meal.fromDetailJson(e)).toList();
-  }
-
-  // 4. Fetch detailed recipe
+  // Fetch detailed meal info (used in detail screen)
   Future<Meal> fetchMealDetail(String id) async {
     final uri = Uri.https(
       _baseUrl,
       '/api/json/v1/1/lookup.php',
       {'i': id},
     );
+    final res = await http.get(uri);
+    final data = jsonDecode(res.body);
 
-    final response = await http.get(uri);
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load meal detail');
-    }
-
-    final data = jsonDecode(response.body);
-    final List list = data['meals'] ?? [];
-
-    if (list.isEmpty) {
-      throw Exception('Meal not found');
-    }
-
-    return Meal.fromDetailJson(list.first);
+    return Meal.fromDetailJson(data['meals'][0]);
   }
 
-  // 5. Random recipe
-  Future<Meal> fetchRandomMeal() async {
+  // REQUIRED: Fetch meal by ID (used in FavoritesScreen)
+  Future<Meal?> fetchMealById(String id) async {
     final uri = Uri.https(
       _baseUrl,
-      '/api/json/v1/1/random.php',
+      '/api/json/v1/1/lookup.php',
+      {'i': id},
     );
+    final res = await http.get(uri);
 
-    final response = await http.get(uri);
+    if (res.statusCode != 200) return null;
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to load random meal');
-    }
+    final data = jsonDecode(res.body);
 
-    final data = jsonDecode(response.body);
-    final List list = data['meals'] ?? [];
+    if (data['meals'] == null) return null;
 
-    return Meal.fromDetailJson(list.first);
+    return Meal.fromDetailJson(data['meals'][0]);
+  }
+
+  // Fetch random meal (for random button)
+  Future<Meal> fetchRandomMeal() async {
+    final uri = Uri.https(_baseUrl, '/api/json/v1/1/random.php');
+    final res = await http.get(uri);
+    final data = jsonDecode(res.body);
+
+    return Meal.fromDetailJson(data['meals'][0]);
   }
 }

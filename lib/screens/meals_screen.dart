@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/meal.dart';
 import '../services/meal_api_service.dart';
+import '../widgets/favorite_button.dart';
 import 'meal_detail_screen.dart';
+
 
 class MealsScreen extends StatefulWidget {
   final String categoryName;
@@ -100,9 +102,18 @@ class _MealsScreenState extends State<MealsScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    child: Image.network(
-                      meal.thumbnail,
-                      fit: BoxFit.cover,
+                    child: Stack(
+                      children: [
+                        Image.network(
+                          meal.thumbnail,
+                          fit: BoxFit.cover,
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: FavoriteButton(mealId: meal.id),
+                        ),
+                      ],
                     ),
                   ),
                 );

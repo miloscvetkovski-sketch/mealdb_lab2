@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "610964716906",
+    "project_id": "mealdblab3",
+    "storage_bucket": "mealdblab3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:610964716906:android:7fa80dc876bc1df3567913",
+        "android_client_info": {
+          "package_name": "com.example.mealdb_lab2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWlRUdZCuxUp7h7ZPnOCRduVgYBSuspw8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
